@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Chatアプリ</title>
+  <style>
+    /* この中にcssをかけます */
+
+    html {
+      box-sizing: border-box;
+    }
+
+    .apparea {
+      margin: auto;
+    }
+
+    /* アウトプットエリアここから */
+
+    .outputarea {
+      background-color: beige;
+      min-height: 500px;
+      display: flex;
+      flex-wrap: wrap;
+      padding-bottom: 170px;
+    }
+
+    /* 付箋のまとまり */
+    .topicbox {
+      width: 450px;
+      background-color: bisque;
+      display: flex;
+      flex-wrap: wrap;
+      margin: 10px;
+    }
+
+    /* 付箋 */
+    .outputbox {
+      background-color: rgb(253, 253, 160);
+      box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+      width: 120px;
+      margin: 10px;
+      height: 80px;
+      overflow: scroll;
+    }
+
+    .outputbox__name {
+      margin: 5px;
+      font-size: 10px;
+    }
+
+    .outputbox__text {
+      margin: 5px;
+    }
+    /* アウトプットエリアここまで */
+
+
+    /* インプットエリアここから */
+    .inputarea {
+      margin: auto;
+      width: 100%;
+      height: 150px;
+      position: fixed;
+      bottom: 0;
+      background-color: white;
+    }
+
+    .inputtitle {
+      margin: 5px auto 5px;
+      text-align: center;
+    }
+
+    .subtextarea {
+      display: flex;
+      height: 50px;
+      width: 600px;
+      margin: auto;
+      justify-content: space-between;
+
+    }
+
+    .subtextbox {
+      display: flex;
+      margin: auto;
+    }
+
+    .subtextbox > p {
+      margin: 5px;
+    }
+
+    .maintextarea {
+      margin: auto;
+      height: 100px;
+      width: 600px;
+    }
+
+    .maintextbox {
+      display: flex;
+      margin: auto;
+      min-width: 400px;
+    }
+
+    #text {
+      resize: vertical;
+      width: 500px;
+      height: 50px;
+    }
+
+    #send {
+      width: 80px;
+      height: 55px;
+    }
+    /* インプットエリアここまで */
+
+  </style>
+</head>
+
+<body>
+  <!-- ブラウザの画面に見える内容 -->
+  <div class="apparea">
+
+    <!-- 保存されたデータが表示される箇所 -->
+    <div class="outputarea" id="output">
+
+    </div>
+
+    <div class="inputarea">
+
+      <p class="inputtitle">名前と内容を記入して送信してください。Topic番号の数値を指定すると、同じTopic内に貼り付けられます</p>
+
+      <div class="subtextarea">
+        <!-- 名前 -->
+        <div class="namebox subtextbox">
+          <p>名前</p>
+          <input type="text" id="username">
+        </div>
+        <!-- Topic番号 -->
+        <div class="related-numbox subtextbox">
+          <p>Topic番号</p>
+          <input type="number" id="relatednum">
+        </div>
+      </div>
+
+      <div class="maintextarea">
+        <div class="maintextbox">
+          <!-- テキストエリア -->
+          <div>
+            <textarea name="" id="text" placeholder="内容を入力"></textarea>
+          </div>
+          <!-- 送信ボタン -->
+          <div>
+            <button id="send">送信</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <!--/ ブラウザの画面に見える内容 -->
+
+
+
+  <!-- JQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+  <!--** 以下Firebase **-->
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <!-- ここにfirebaseのscriptを貼り付ける -->
+  <script src="https://www.gstatic.com/firebasejs/7.14.2/firebase.js"></script>
+
+  <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+      apiKey: "AIzaSyCJ5MecHv0fd3zCLNY0u_zCSUVk1ZU09WQ",
+      authDomain: "dev18-js3-kadai.firebaseapp.com",
+      databaseURL: "https://dev18-js3-kadai.firebaseio.com",
+      projectId: "dev18-js3-kadai",
+      storageBucket: "dev18-js3-kadai.appspot.com",
+      messagingSenderId: "694467507074",
+      appId: "1:694467507074:web:102e3e9d8357c0a929959b"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    //firebaseのデーターベース（保存させる場所）を使いますよと言うjsのコードを貼り付ける
+    // xxxxxスクリプトを貼り付ける
+    const newPostRef = firebase.database().ref();
+
+    // ここから下にjqueryの処理を書いて練習します
+    // 送信ボタンをクリックされたら次の処理をする
+
+
+    $("#send").on("click", function () {
+
+      // Topic番号の入力エリアに数値が入っているのかの確認
+
+      let inputnum = $("#relatednum").val();
+
+      console.log(inputnum);
+
+
+      // 現状のTopicの数を数える
+      let cnt = $(".topicbox").length;
+
+      console.log(cnt);
+
+
+      // 番号を付与するない時は既存のTopic数に１加えたものを番号にする)
+      let tpnum;
+
+      // inputに数値がない時は、現状のTopic数に1加えたものをTopic番号にする
+      if(inputnum ==""){
+        tpnum = cnt+1;
+      // inputに数値がある時は、その数値をTopic番号にする。ただし、Topicの数より多い数値はエラーとする
+      }else if(inputnum > cnt){
+        alert("既存のTopic番号を半角数字で入力してください");
+        return false;
+      }else{
+        tpnum = inputnum;
+      }
+
+      console.log(tpnum);
+
+      // データを登録で送る
+      newPostRef.push({
+        //名前
+        username: $("#username").val(),
+        //テキストエリア
+        text: $("#text").val(),
+        //Topic番号
+        topic_num: tpnum
+
+      })
+      // 文字を空にする
+      $("#text").val(""); //空にする
+
+    });
+
+    // 受信処理
+    newPostRef.on("child_added", function (data) {
+      //ここに保存されたデータが全て入ってくる
+      // function (data)のdataにfirebaseのデータが入ってくる
+      let v = data.val();
+      // let k = data.key; //今回は使いません
+
+      //console.logで受信=firebaseに登録されている中身を確認しよう！
+      console.log(v);
+
+      //対象のデータについて、同じtopic_numのものがすでに存在するかどうかの判別
+      
+      let tpc = $("#topicbox"+v.topic_num).length;
+      console.log(tpc);
+
+      if(tpc == 0){
+
+        //同じTopicがまだ存在しない場合、Topicの領域+データをhtmlに書き込む 
+        let str = `
+          <div class="topicbox" id="topicbox${v.topic_num}">
+            <p class="topictitle">${v.topic_num}</p>
+            <div class="outputbox">
+              <p class="outputbox__name">${v.username}</p>
+              <p class="outputbox__text">${v.text}</p>
+            </div>
+          </div>`;
+
+        // ここでデータをhtmlに埋め込む
+        $("#output").append(str);
+
+      }else{
+
+        //同じTopicがすでに存在する場合、そのTopicの領域にhtmlを書き込む
+        let str = `
+            <div class="outputbox">
+              <p class="outputbox__name">${v.username}</p>
+              <p class="outputbox__text">${v.text}</p>
+            </div>`;
+
+        // ここでデータをhtmlに埋め込む
+        $("#topicbox"+v.topic_num).append(str);
+
+      }
+
+      // 数値が取れるのか確認のconsole
+        // var tpc2 = $("#topicbox"+v.topic_num).length;
+        // console.log(tpc2);
+
+    });
+
+  </script>
+
+
+</body>
+
+</html>
