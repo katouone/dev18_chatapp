@@ -44,6 +44,13 @@
       overflow: scroll;
     }
 
+    .outputbox:hover {
+      box-sizing: border-box;
+      color: rgb(255, 6, 6);
+      font-weight: bold;
+      border: solid 2px black;
+    }
+
     .outputbox__name {
       margin: 5px;
       font-size: 10px;
@@ -113,6 +120,7 @@
 
     #modify {
       display: none;
+      background-color: rgb(202, 202, 202);
     }
 
 
@@ -297,12 +305,16 @@
     });
 
     // 更新処理
+
     $(document).on("click",".outputbox",function(){  // 後から追加したhtmlを指定しているため、documentを最初に持ってきたこの書き方
       
       //クリックした付箋のkeyを取得
       let t = $(this).attr("name");
 
       console.log(t);
+
+      $(".outputbox").css("background-color","rgb(253, 253, 160)");
+      $(this).css("background-color","rgb(255, 218, 51)");
 
       // 最初は見せていない更新部分の入力フォームを呼び出す
       $("#modify").css("display", "block");
@@ -315,13 +327,14 @@
       console.log(existingname);
       console.log(existingtext);
       console.log(existingtpnum);
-      
+
       //取得した内容を入力フォームに書き起こす
       $("#modifyusername").attr("value",existingname);
       $("#modifytext").text(existingtext);
       $("#modifyrelatednum").attr("value",existingtpnum);
 
       //記入内容をFirebase上で更新
+      $("#modifysend").off("click"); 
       $("#modifysend").on("click",function(){
 
         //console.log($("#modifyusername").val());
