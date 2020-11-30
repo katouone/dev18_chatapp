@@ -100,16 +100,24 @@
       min-width: 400px;
     }
 
-    #text {
+    .text {
       resize: vertical;
       width: 500px;
       height: 50px;
     }
 
-    #send {
+    .send {
       width: 80px;
       height: 55px;
     }
+
+    #modify {
+      display: none;
+    }
+
+
+
+
     /* インプットエリアここまで */
 
   </style>
@@ -124,7 +132,8 @@
 
     </div>
 
-    <div class="inputarea">
+    <!-- 入力エリア -->
+    <div class="inputarea" id="newinput">
 
       <p class="inputtitle">名前と内容を記入して送信してください。Topic番号の数値を指定すると、同じTopic内に貼り付けられます</p>
 
@@ -145,16 +154,52 @@
         <div class="maintextbox">
           <!-- テキストエリア -->
           <div>
-            <textarea name="" id="text" placeholder="内容を入力"></textarea>
+            <textarea name="" id="text" class="text" placeholder="内容を入力"></textarea>
           </div>
           <!-- 送信ボタン -->
           <div>
-            <button id="send">送信</button>
+            <button id="send" class="send">送信</button>
           </div>
         </div>
       </div>
 
     </div>
+
+    <!-- 更新の場合の入力エリア -->
+
+    <div class="inputarea" id="modify"> 
+
+      <p class="inputtitle">選んでいる付箋の内容を更新して送信してください</p>
+
+      <div class="subtextarea">
+        <!-- 名前 -->
+        <div class="namebox subtextbox">
+          <p>名前</p>
+          <input type="text" id="modifyusername">
+        </div>
+        <!-- Topic番号 -->
+        <div class="related-numbox subtextbox">
+          <p>Topic番号</p>
+          <input type="number" id="modifyrelatednum">
+        </div>
+      </div>
+
+      <div class="maintextarea">
+        <div class="maintextbox">
+          <!-- テキストエリア -->
+          <div>
+            <textarea name="" id="modifytext" class="text" placeholder="内容を入力"></textarea>
+          </div>
+          <!-- 送信ボタン -->
+          <div>
+            <button id="modifysend" class="send">更新</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
   </div>
   <!--/ ブラウザの画面に見える内容 -->
 
@@ -192,34 +237,49 @@
 
     $("#send").on("click", function () {
 
-      // Topic番号の入力エリアに数値が入っているのかの確認
+      // Topic番号の入力エリアに数値が入っているのかどうかの確認
 
       let inputnum = $("#relatednum").val();
 
       console.log(inputnum);
 
-
       // 現状のTopicの数を数える
-      let cnt = $(".topicbox").length;
+      // let cnt = $(".topicbox").length;
+
+      // 現状のTOPIC数を配列に格納して、その中でTopic数の最大値を求める（ただし、配列がからのときは最大値はとする）
+
+      let tpccont =[];
+      $(".topicbox").each(function(){
+        tpccont.push($(this).attr("name"))
+      })
+
+      console.log(tpccont)
+
+      let cnt;
+      if(tpccont.length == 0){
+        cnt = 0
+      }else{
+        cnt = Math.max.apply(null,tpccont);
+      }
 
       console.log(cnt);
 
-
-      // 番号を付与するない時は既存のTopic数に１加えたものを番号にする)
+      // 番号を付与しない時は既存のTopic数の最大値に１加えたものを番号にする)
       let tpnum;
 
-      // inputに数値がない時は、現状のTopic数に1加えたものをTopic番号にする
+      // inputに数値が入っている時は、現状のTopic数の最大値に1加えたものをTopic番号にする
       if(inputnum ==""){
         tpnum = cnt+1;
-      // inputに数値がある時は、その数値をTopic番号にする。ただし、Topicの数より多い数値はエラーとする
-      }else if(inputnum > cnt){
-        alert("既存のTopic番号を半角数字で入力してください");
-        return false;
+      // inputに数値がある時は、その数値をTopic番号にする。ただし、Topicの数より多い数値はエラーとする →取りやめ
+      // }else if(inputnum > cnt){
+      //   alert("既存のTopic番号を半角数字で入力してください");
+      //   return false;
+      // inputに数値があるときは、それをTopic番号にする。
       }else{
         tpnum = inputnum;
       }
 
-      console.log(tpnum);
+      // console.log(tpnum);
 
       // データを登録で送る
       newPostRef.push({
@@ -231,20 +291,67 @@
         topic_num: tpnum
 
       })
-      // 文字を空にする
+      // 文字を空にする(名前は空にしない)
       $("#text").val(""); //空にする
 
     });
+
+    // 更新処理
+    $(document).on("click",".outputbox",function(){  // 後から追加したhtmlを指定しているため、documentを最初に持ってきたこの書き方
+      
+      //クリックした付箋のkeyを取得
+      let t = $(this).attr("name");
+
+      console.log(t);
+
+      // 最初は見せていない更新部分の入力フォームを呼び出す
+      $("#modify").css("display", "block");
+
+      // クリックした付箋の内容を取得
+      let existingname = $(this).children(".outputbox__name").text();
+      let existingtext = $(this).children(".outputbox__text").text();
+      let existingtpnum = $(this).prevAll(".topictitle").text();
+
+      console.log(existingname);
+      console.log(existingtext);
+      console.log(existingtpnum);
+      
+      //取得した内容を入力フォームに書き起こす
+      $("#modifyusername").attr("value",existingname);
+      $("#modifytext").text(existingtext);
+      $("#modifyrelatednum").attr("value",existingtpnum);
+
+      //記入内容をFirebase上で更新
+      $("#modifysend").on("click",function(){
+
+        //console.log($("#modifyusername").val());
+
+        newPostRef.child(t).update({
+          //名前
+          username: $("#modifyusername").val(),
+          //テキストエリア
+          text: $("#modifytext").val(),
+          //Topic番号
+          topic_num: $("#modifyrelatednum").val()
+        })
+
+        $("#modify").css("display", "none");
+
+      })
+
+    })
+
 
     // 受信処理
     newPostRef.on("child_added", function (data) {
       //ここに保存されたデータが全て入ってくる
       // function (data)のdataにfirebaseのデータが入ってくる
       let v = data.val();
-      // let k = data.key; //今回は使いません
+      let k = data.key; //今回は使いません
 
       //console.logで受信=firebaseに登録されている中身を確認しよう！
       console.log(v);
+      console.log(k);
 
       //対象のデータについて、同じtopic_numのものがすでに存在するかどうかの判別
       
@@ -252,12 +359,11 @@
       console.log(tpc);
 
       if(tpc == 0){
-
         //同じTopicがまだ存在しない場合、Topicの領域+データをhtmlに書き込む 
         let str = `
-          <div class="topicbox" id="topicbox${v.topic_num}">
+          <div class="topicbox" id="topicbox${v.topic_num}" name="${v.topic_num}">
             <p class="topictitle">${v.topic_num}</p>
-            <div class="outputbox">
+            <div class="outputbox" name="${k}">
               <p class="outputbox__name">${v.username}</p>
               <p class="outputbox__text">${v.text}</p>
             </div>
@@ -267,10 +373,9 @@
         $("#output").append(str);
 
       }else{
-
         //同じTopicがすでに存在する場合、そのTopicの領域にhtmlを書き込む
         let str = `
-            <div class="outputbox">
+            <div class="outputbox" name="${k}">
               <p class="outputbox__name">${v.username}</p>
               <p class="outputbox__text">${v.text}</p>
             </div>`;
@@ -280,11 +385,76 @@
 
       }
 
-      // 数値が取れるのか確認のconsole
-        // var tpc2 = $("#topicbox"+v.topic_num).length;
-        // console.log(tpc2);
+      //Topicの番号順で並び替え
+      $("#output").each(function(){
+        $(this).html(
+          $(this).find(".topicbox").sort(function(a,b){
+            return $(a).attr("name")-$(b).attr("name");
+          })
+        );
+      });
 
     });
+
+
+    // 更新処理（Firebaseとのやりとり）→移動はできるが、
+    newPostRef.on("child_changed", function (data) {
+      //ここに保存されたデータが全て入ってくる
+      // function (data)のdataにfirebaseのデータが入ってくる
+      let v = data.val();
+      let k = data.key; //今回は使いません
+
+      //console.logで受信=firebaseに登録されている中身を確認しよう！
+      console.log(v);
+      console.log(k);
+
+      //もとの付箋をhtml上から削除
+
+      $(".outputbox[name="+k+"]").remove();
+
+      //対象のデータについて、同じtopic_numのものがすでに存在するかどうかの判別
+        
+      let tpc = $("#topicbox"+v.topic_num).length;
+      console.log(tpc);
+
+      if(tpc == 0){
+        //同じTopicがまだ存在しない場合、Topicの領域+データをhtmlに書き込む 
+        let str = `
+          <div class="topicbox" id="topicbox${v.topic_num}" name="${v.topic_num}">
+            <p class="topictitle">${v.topic_num}</p>
+            <div class="outputbox" name="${k}">
+              <p class="outputbox__name">${v.username}</p>
+              <p class="outputbox__text">${v.text}</p>
+            </div>
+          </div>`;
+
+        // ここでデータをhtmlに埋め込む
+        $("#output").append(str);
+
+      }else{
+        //同じTopicがすでに存在する場合、そのTopicの領域にhtmlを書き込む
+        let str = `
+            <div class="outputbox" name="${k}">
+              <p class="outputbox__name">${v.username}</p>
+              <p class="outputbox__text">${v.text}</p>
+            </div>`;
+
+        // ここでデータをhtmlに埋め込む
+        $("#topicbox"+v.topic_num).append(str);
+      }
+
+      //Topicの番号順で並び替え
+        $("#output").each(function(){
+          $(this).html(
+            $(this).find(".topicbox").sort(function(a,b){
+              return $(a).attr("name")-$(b).attr("name");
+            })
+          );
+        });
+
+    });
+
+
 
   </script>
 
