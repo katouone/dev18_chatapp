@@ -240,9 +240,8 @@
     const newPostRef = firebase.database().ref();
 
     // ここから下にjqueryの処理を書いて練習します
-    // 送信ボタンをクリックされたら次の処理をする
 
-
+    // 新規に登録する時のデータ入力
     $("#send").on("click", function () {
 
       // Topic番号の入力エリアに数値が入っているのかどうかの確認
@@ -304,7 +303,8 @@
 
     });
 
-    // 更新処理
+
+    // 更新するときの入力処理（既存のデータについて変更した時、Firebaseのデータを書き換える処理（入力するところまで））
 
     $(document).on("click",".outputbox",function(){  // 後から追加したhtmlを指定しているため、documentを最初に持ってきたこの書き方
       
@@ -355,7 +355,7 @@
     })
 
 
-    // 受信処理
+    // 新規登録受信処理（新規にデータが追加されたときの受信）
     newPostRef.on("child_added", function (data) {
       //ここに保存されたデータが全て入ってくる
       // function (data)のdataにfirebaseのデータが入ってくる
@@ -410,12 +410,12 @@
     });
 
 
-    // 更新処理（Firebaseとのやりとり）→移動はできるが、
+    // 更新後受信処理（Firebaseの内容が更新/変更された時の受信処理）
     newPostRef.on("child_changed", function (data) {
       //ここに保存されたデータが全て入ってくる
       // function (data)のdataにfirebaseのデータが入ってくる
       let v = data.val();
-      let k = data.key; //今回は使いません
+      let k = data.key; //キーコード取得
 
       //console.logで受信=firebaseに登録されている中身を確認しよう！
       console.log(v);
